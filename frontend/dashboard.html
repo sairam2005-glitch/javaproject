@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Wallet App - View your balance and manage your wallet">
+    <title>Wallet App - Dashboard</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <h1>💰 Dashboard</h1>
+        <p class="user-email">Logged in as <span id="userEmail"></span></p>
+
+        <div class="balance-card">
+            <div class="balance-label">Available Balance</div>
+            <div class="balance-amount" id="balanceAmount">Loading...</div>
+        </div>
+
+        <div class="btn-group">
+            <button class="btn-primary" onclick="window.location.href='send.html'">Send Money</button>
+            <button class="btn-secondary" onclick="loadBalance()">Refresh Balance</button>
+            <button class="btn-danger" onclick="logout()">Logout</button>
+        </div>
+
+        <div class="message" id="message"></div>
+    </div>
+
+    <script>
+        const API = "http://localhost:8080/api";
+        const email = localStorage.getItem("walletEmail");
+
+        // Redirect to login if not logged in
+        if (!email) {
+            window.location.href = "login.html";
+        }
+
+        document.getElementById("userEmail").textContent = email;
+
+        function showMessage(text, type) {
+            const el = document.getElementById("message");
+            el.textContent = text;
+            el.className = "message " + type;
+        }
+
+        async function loadBalance() {
+            try {
+                const res = await fetch(API + "/balance?email=" + encodeURIComponent(email));
+                const data = await res.json();
+
+                if (res.ok) {
+                    document.getElementById("balanceAmount").textContent = "₹" + parseFloat(data.balance).toFixed(2);
+                } else {
+                    showMessage(data.error || "Failed to load balance.", "error");
+                }
+            } catch (err) {
+                showMessage("Cannot connect to server.", "error");
+                document.getElementById("balanceAmount").textContent = "Error";
+            }
+        }
+
+        function logout() {
+            localStorage.removeItem("walletEmail");
+            window.location.href = "login.html";
+        }
+
+        // Load balance on page load
+        loadBalance();
+    </script>
+</body>
+</html>
